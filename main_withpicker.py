@@ -17,6 +17,34 @@ import streamlit as st
 global pil_image
 global imOrg
 
+blush_colour_values = {
+    "Pink" : [194, 29, 209],
+    "Plum" : [142, 69, 209],
+    "Coral" : [255, 127, 80],
+    "Light Pink": [228, 117, 230],
+    "Minimal" : [255, 229, 180],
+    "Formal": [255, 182, 193],
+    "Party": [255, 192, 203],
+    "Goth": [103, 49, 71]
+}
+
+lipstick_colour_values = {
+    "Dark Pink": [204, 16, 176],
+    "Peach": [245, 141, 66],
+    "Light Pink": [228, 117, 230],
+    "Burgundy": [128, 0, 32],
+    "Minimal" : [248, 131, 121],
+    "Formal": [204, 85, 0],
+    "Party": [194, 30, 86],
+    "Goth" : [0, 0, 0]
+}
+
+eyebrow_color_values = {
+    "Minimal" : [92, 64, 51],
+    "Formal" : [92, 64, 51],
+    "Party" : [72, 60, 50]
+}
+
 #function to pick style and access rgb values
 def style_picker(n):
     loc = ('./StyleColour.xlsx')
@@ -27,7 +55,7 @@ def style_picker(n):
         rgbvals.append(int(sheet.cell_value(n, i)))
     return rgbvals
 
-def run_script(image, makeup_number_choice):
+def run_script(image, makeup_choice, lipstick_colour, blush_colour):
     global pil_image
     global imOrg
     
@@ -67,6 +95,14 @@ def run_script(image, makeup_number_choice):
 
     #Taking input on type of colour
     #m=int(input())
+    makeup_number_map = {
+        "Minimal" : 1,
+        "Formal" : 2,
+        "Party" : 3,
+        "Goth": 4 
+    }
+
+    makeup_number_choice = makeup_number_map[makeup_choice]
     m = makeup_number_choice
 
     rvals=style_picker(m)
@@ -91,8 +127,15 @@ def run_script(image, makeup_number_choice):
     right_eyebrow=[shape[i] for i in indices]
 
     # Draw lipstick, eyeliner and eyebrow pencil on image
-    d.polygon(top_lip, fill=(rvals[0],rvals[1],rvals[2],100))
-    d.polygon(bottom_lip, fill=(rvals[0],rvals[1],rvals[2],100))
+    if(lipstick_colour):
+        colour_values = lipstick_colour_values[lipstick_colour]
+        d.polygon(top_lip, fill=(colour_values[0],colour_values[1],colour_values[2],100))
+        d.polygon(bottom_lip, fill=(colour_values[0],colour_values[1],colour_values[2],100))
+    else:
+        colour_values = lipstick_colour_values[makeup_choice]
+        d.polygon(top_lip, fill=(colour_values[0],colour_values[1],colour_values[2],100))
+        d.polygon(bottom_lip, fill=(colour_values[0],colour_values[1],colour_values[2],100))
+    
     d.line(left_eye, fill=(rvals[3],rvals[4],rvals[5], 150), width=3)
     d.line(right_eye, fill=(rvals[3],rvals[4],rvals[5], 150), width=3)
     d.polygon(left_eyebrow, fill=(rvals[6],rvals[7],rvals[8], 150))
@@ -102,7 +145,9 @@ def run_script(image, makeup_number_choice):
     plt.imshow(pil_image)
 
     #blush colour
-    Rg, Gg, Bg = (rvals[9],rvals[10],rvals[11])
+    Rg, Gg, Bg = blush_colour_values[makeup_choice]
+    if(blush_colour):
+        Rg, Gg, Bg = blush_colour_values[blush_colour]
 
     #load image with initial makeup
     pil_image = np.asarray(pil_image)
@@ -209,18 +254,27 @@ if(image):
     st.image(image)
 makeup_choice = st.radio("Choose makeup style", ["Minimal","Formal","Party","Goth"])
 
-makeup_number_map = {
-    "Minimal" : 1,
-    "Formal" : 2,
-    "Party" : 3,
-    "Goth": 4 
-}
+# makeup_number_map = {
+#     "Minimal" : 1,
+#     "Formal" : 2,
+#     "Party" : 3,
+#     "Goth": 4 
+# }
 
-makeup_number_choice = makeup_number_map[makeup_choice]
+# makeup_number_choice = makeup_number_map[makeup_choice]
+
+lipstick_colour = st.radio("Choose lipstick colour (optional)", ["According to style", "Dark Pink", "Peach", "Light Pink", "Burgundy"])
+blush_colour = st.radio("Choose blush colour (optional)", ["According to style", "Pink", "Plum", "Coral", "Light Pink"])
+
+if(lipstick_colour == "According to style"):
+    lipstick_colour = None
+
+if(blush_colour == "According to style"):
+    blush_colour = None
 
 clicked = st.button("Run")
 if(clicked):
-    run_script(image, makeup_number_choice)
+    run_script(image, makeup_choice, lipstick_colour, blush_colour)
     st.image("./applied_result.png")
 
 
